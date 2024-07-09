@@ -1,35 +1,43 @@
-# deploy
-name: CICD using maven and SL lab 
-on: 
- push: 
-   branches: ["main"]
- workflow_dispatch: 
-jobs: 
+name: CICD using maven and SL lab
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
   buildandDeploy:
     runs-on: windows-latest
-    steps: 
-    - name: Clone the Repo 
-      uses: actions/checkout@v4 
-    - name: Setup JDK 11 and maven 
-      uses: actions/setup-java@v4
-      with:
-        distribution: 'temurin'
-        java-version: '11'
-        cache: 'maven'
-    - name: Build with Maven 
-      run: mvn -B package --file pom.xml 
-    - name: connect to LAb and deploy code on tomcat9
-      uses: cross-the-world/ssh-scp-ssh-pipelines@latest
-      with:
-       host: 'mittalsonal04gmsl0045.simplilearnlabs.com'
-       user: 'mittalsonal04gm'
-       pass: 'al04gm0A@ad34w'
-       port: 42006
-       connect_timeout: 10s
-       first_ssh: |
-          sudo chmod 777 /var/lib/tomcat9/webapps
-       scp: |
-          './target/*war' => /var/lib/tomcat9/webapps
-       last_ssh: |
-          sudo systemctl restart tomcat9
+    steps:
+      - name: Clone the Repo
+        uses: actions/checkout@v4
 
+      - name: Setup JDK 11 and maven
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'maven'
+
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+      - name: Install SSH client (OpenSSH) for Windows
+        run: |
+          choco install openssh -y
+          RefreshEnv
+
+      - name: Deploy with PowerShell
+        env:
+          SSH_USER: mittalsonal04gm
+          SSH_HOST: mittalsonal04gmsl0045.simplilearnlabs.com
+          SSH_PASS: al04gm0A@ad34w
+          SSH_PORT: 42006
+        run: |
+          # SSH commands using PowerShell
+          sshpass -p $env:SSH_PASS ssh -o StrictHostKeyChecking=no -p $env:SSH_PORT $env:SSH_USER@$env:SSH_HOST "sudo chmod 777 /var/lib/tomcat9/webapps"
+          
+          # SCP using PowerShell
+          scp -P $env:SSH_PORT -o StrictHostKeyChecking=no './target/*war' $env:SSH_USER@$env:SSH_HOST:/var/lib/tomcat9/webapps
+          
+          # SSH command to restart tomcat
+          sshpass -p $env:SSH_PASS ssh -o StrictHostKeyChecking=no -p $env:SSH_PORT $env:SSH_USER@$env:SSH_HOST "sudo systemctl restart tomcat9"
