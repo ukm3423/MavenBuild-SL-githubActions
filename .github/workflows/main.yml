@@ -21,7 +21,7 @@ jobs:
     - name: connect to LAb and deploy code on tomcat9
       uses: cross-the-world/ssh-scp-ssh-pipelines@latest
       with:
-       host: 'https://mittalsonal04gmsl0045.simplilearnlabs.com/'
+       host: 'mittalsonal04gmsl0045.simplilearnlabs.com'
        user: 'mittalsonal04gm'
        pass: 'al04gm0A@ad34w'
        port: 42006
